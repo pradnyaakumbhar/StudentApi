@@ -13,6 +13,7 @@ import (
 
 	"github.com/pradnyaakumbhar/students-api/internal/config"
 	"github.com/pradnyaakumbhar/students-api/internal/http/handlers/student"
+	"github.com/pradnyaakumbhar/students-api/internal/storage/sqlite"
 )
 
 func main() {
@@ -20,9 +21,17 @@ func main() {
 	cfg := config.MustLoad()
 
 	// db setup
+	storage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	slog.Info("Storage initialized", slog.String("env", cfg.Env), slog.String("version", "1.0.0"))
+
 	// setup router
 	router := http.NewServeMux()
-	router.HandleFunc("POST /api/students", student.New())
+	router.HandleFunc("POST /api/students", student.New(storage))
+	// router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
 
 	// setup server
 	server := http.Server{
