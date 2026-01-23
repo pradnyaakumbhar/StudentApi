@@ -101,3 +101,31 @@ func (s *Sqlite) GetStudents() ([]types.Student, error) {
 	}
 	return students, nil
 }
+
+func (s *Sqlite) UpdateStudent(id int64, name string, email string, age int) (types.Student, error) {
+	stmt, err := s.Db.Prepare("UPDATE students SET name = ?, email = ?, age = ? WHERE id = ?")
+	if err != nil {
+		return types.Student{}, err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(name, email, age, id)
+	if err != nil {
+		return types.Student{}, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return types.Student{}, err
+	}
+	if rowsAffected == 0 {
+		return types.Student{}, fmt.Errorf("no student found with id %s", fmt.Sprint(id))
+	}
+
+	return types.Student{
+		Id:    id,
+		Name:  name,
+		Email: email,
+		Age:   age,
+	}, nil
+}
